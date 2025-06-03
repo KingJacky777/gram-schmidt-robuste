@@ -27,23 +27,7 @@ Pkg.activate("rapport_env")    # activate a virtual environment
 # Implémentation de Gram-Schmidt classique
 
 ```{julia}
-using LinearAlgebra
-
-function gramschmidt(A::Matrix)
-    Q = zeros(eltype(A), size(A))
-
-    for i in axes(A, 2)
-        Q[:, i] = A[:, i]
-
-        for j in 1:i-1
-            Q[:, i] -= dot(Q[:, j], Q[:, i]) * Q[:, j]
-        end
-
-        Q[:, i] = Q[:, i] / norm(Q[:, i])
-    end
-
-    return Q
-end
+{{< include gram-schmidt.jl >}}
 ```
 
 # Illustration de l'échec en cas de dépendance linéaire
@@ -53,34 +37,14 @@ X_dep = [ -1.0  -1.0  -1.0;
            1.0   3.0   3.0;
           -1.0  -1.0  -1.0 ]
 ```
-Dans cet exemple Julia, nous pouvons remarquer une dépendance linaire entre la ligne 1 et 3. Selon le code de gram-schmidt classique, une telle dépendance va effectuer une division par zéro donnant un vecteur avec une valeur NaN. Ce vecteur sera tout de même rajouter dans Q donnant une taille (length) inchangée.
+Dans cet exemple Julia, nous pouvons remarquer une dépendance linaire entre la ligne 1 et 3. Selon le code de gram-schmidt classique, une telle dépendance va effectuer une division par zéro donnant un vecteur avec une valeur NaN. Ce vecteur sera tout de même rajouter dans Q donnant une taille inchangée.
 
 # Implémentation de Gram-Schmidt plus robuste
 
 ```{julia}
-using LinearAlgebra
-
-function gramschmidtrobust(A::Matrix)
-    m, n = size(A)
-    Q = Matrix{eltype(A)}(undef, m, 0)
-
-    for i in 1:n
-        v = A[:, i]
-        for j in 1:size(Q, 2)
-            v -= dot(Q[:, j], v) * Q[:, j]
-        end
-
-        norm_v = norm(v)
-        if norm_v != 0
-            q = v / norm_v
-            Q = hcat(Q, q)
-        end
-    end
-
-    return Q
-end
+{{< include gram-schmidt-robuste.jl >}}
 ```
-Voici mon implémentation de la fonction gram-schmidt en considérant les vecteurs colinéaires. Avant d'ajouter un vecteur à Q, la fonction retire les composantes projetées sur les vecteurs déjà rajoutés à Q. Après, on calcule la norme du vecteur restant et si celle-ci n'est pas égale à zéro, on peut rajout le vecteur orthogonal et diviser par sa norme à Q. Ainsi, on n'obtient pas nécessairement la même taille (length) de matrice.
+Voici mon implémentation de la fonction gram-schmidt en considérant les vecteurs colinéaires. Avant d'ajouter un vecteur à Q, la fonction retire les composantes projetées sur les vecteurs déjà rajoutés à Q. Après, on calcule la norme du vecteur restant et si celle-ci n'est pas égale à zéro, on peut rajout le vecteur orthogonal et diviser par sa norme à Q. Ainsi, on n'obtient pas nécessairement la même taille de matrice.
 
 # Démonstration de la nouvelle implémentation
  
