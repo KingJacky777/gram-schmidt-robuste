@@ -2,8 +2,8 @@
 title: "Rapport de laboratoire 1: méthode de Gram-Schmidt"
 subtitle: "MTH8211"
 author:
-  - name: Votre nom
-    email: votre.adresse@polymtl.ca
+  - name: Zack Nolet
+    email: zack.nolet@polymtl.ca
     affiliation:
       - name: Polytechnique Montréal
 format:
@@ -26,27 +26,64 @@ Pkg.activate("rapport_env")    # activate a virtual environment
 
 # Implémentation de Gram-Schmidt classique
 
-<!--
-Inclure la méthode vue en classe dans gram-schmidt.jl et l'afficher ici.
--->
+```{julia}
+using LinearAlgebra
+
+function gramschmidt(A::Matrix)
+    Q = zeros(eltype(A), size(A))
+
+    for i in axes(A, 2)
+        Q[:, i] = A[:, i]
+
+        for j in 1:i-1
+            Q[:, i] -= dot(Q[:, j], Q[:, i]) * Q[:, j]
+        end
+
+        Q[:, i] = Q[:, i] / norm(Q[:, i])
+    end
+
+    return Q
+end
+```
 
 # Illustration de l'échec en cas de dépendance linéaire
 
-<!--
-Proposer un exemple qui met l'implémentation classique en défaut.
-Expliquer la cause de l'échec.
--->
+```{julia}
+X_dep = [ -1.0  -1.0  -1.0;
+           1.0   3.0   3.0;
+          -1.0  -1.0  -1.0 ]
+```
+Dans cet exemple Julia, nous pouvons remarquer une dépendance linaire entre la ligne 1 et 3. Selon le code de gram-schmidt classique, une telle dépendance va effectuer une division par zéro donnant un vecteur avec une valeur NaN. Ce vecteur sera tout de même rajouter dans Q donnant une taille (length) inchangée.
 
 # Implémentation de Gram-Schmidt plus robuste
 
-<!--
-Proposer une manière de vérifier que les vecteurs d'entrée sont linéairement dépendants.
-Votre proposition n'a pas besoin d'être parfaite, mais vous devez discuter ses avantages et inconvénients.
-Implémenter cette méthode dans un fichier gram-schmidt-robuste.jl.
--->
+```{julia}
+using LinearAlgebra
+
+function gramschmidtrobust(A::Matrix)
+    m, n = size(A)
+    Q = Matrix{eltype(A)}(undef, m, 0)
+
+    for i in 1:n
+        v = A[:, i]
+        for j in 1:size(Q, 2)
+            v -= dot(Q[:, j], v) * Q[:, j]
+        end
+
+        norm_v = norm(v)
+        if norm_v != 0
+            q = v / norm_v
+            Q = hcat(Q, q)
+        end
+    end
+
+    return Q
+end
+```
+Voici mon implémentation de la fonction gram-schmidt en considérant les vecteurs colinéaires. Avant d'ajouter un vecteur à Q, la fonction retire les composantes projetées sur les vecteurs déjà rajoutés à Q. Après, on calcule la norme du vecteur restant et si celle-ci n'est pas égale à zéro, on peut rajout le vecteur orthogonal et diviser par sa norme à Q. Ainsi, on n'obtient pas nécessairement la même taille (length) de matrice.
 
 # Démonstration de la nouvelle implémentation
-
-<!--
-Inclure ici votre test.jl et l'exécuter.
--->
+ 
+```{julia}
+{{< include test.jl >}}
+```
